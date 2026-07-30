@@ -12,7 +12,9 @@ Runs on a schedule (cron). Once the final race of the series (TOTAL_RACES)
 is scored, it posts a wrap-up message and stops itself until pointed at the
 next series.
 
-No AI/LLM calls, no API keys beyond the Discord webhook, no ongoing cost.
+No AI/LLM calls, no ongoing cost. The Discord webhook URL is read from
+discord_webhook_url.txt (gitignored) rather than hardcoded here, since
+this repo is public.
 """
 
 import datetime
@@ -37,13 +39,18 @@ TARGET_SKIPPER_NAME = "Rhodes"
 # next series -- if this number's wrong, just edit it any time.
 TOTAL_RACES = 7
 
-# Discord: Server Settings -> Integrations -> Webhooks -> New Webhook -> Copy URL
-DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/CHANGE-ME/CHANGE-ME"
-
 # State files, kept next to the script.
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 RACE_COUNT_FILE = os.path.join(SCRIPT_DIR, "last_race_count.txt")
 DONE_FILE = os.path.join(SCRIPT_DIR, "series_complete.flag")
+
+# Discord webhook URL lives in its own file, NOT in this script. This repo
+# is public -- a webhook URL baked into tracked code would let anyone who
+# finds it spam your Discord channel. Create this file once on the Pi with
+# just the URL as its contents (Server Settings -> Integrations -> Webhooks
+# -> New Webhook -> Copy URL). It's listed in .gitignore, so it never gets
+# committed or uploaded to GitHub.
+WEBHOOK_FILE = os.path.join(SCRIPT_DIR, "discord_webhook_url.txt")
 
 RACE_HEADER_RE = re.compile(r"Race\s+(\d+)", re.IGNORECASE)
 FLEET_SUFFIX_RE = re.compile(r"\s*\(\d+\s*boats?\)", re.IGNORECASE)
@@ -197,14 +204,28 @@ def read_int(path):
     return None
 
 
+def read_text(path):
+    if os.path.exists(path):
+        return open(path).read().strip()
+    return None
+
+
 def write_text(path, content):
     with open(path, "w") as f:
         f.write(str(content))
 
 
 def notify_discord(message: str):
+    webhook_url = read_text(WEBHOOK_FILE)
+    if not webhook_url:
+        print(
+            f"No webhook URL found at {WEBHOOK_FILE} -- create that file with your "
+            "Discord webhook URL as its only contents. Skipping notification.",
+            file=sys.stderr,
+        )
+        return
     try:
-        requests.post(DISCORD_WEBHOOK_URL, json={"content": message}, timeout=10)
+        requests.post(webhook_url, json={"content": message}, timeout=10)
     except Exception as e:
         print(f"Notification failed: {e}", file=sys.stderr)
 

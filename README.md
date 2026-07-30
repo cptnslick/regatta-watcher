@@ -25,9 +25,16 @@ Once the race count reaches `TOTAL_RACES` (7), it sends a second Discord message
 
 1. In Discord, go to your server → **Server Settings → Integrations → Webhooks → New Webhook**.
 2. Pick the channel you want results posted to, then click **Copy Webhook URL**.
-3. Open `regatta_watcher.py` and paste it into `DISCORD_WEBHOOK_URL`.
 
 No bot, no Discord app permissions, no ongoing account needed — the webhook URL is all it takes.
+
+**Don't put the webhook URL in `regatta_watcher.py`.** This repo is public, and anyone who found a webhook URL baked into the code could spam your Discord channel with it. Instead, once the script is on the Pi (step 3 below), create a separate file next to it:
+
+```bash
+echo "PASTE_YOUR_WEBHOOK_URL_HERE" > ~/regatta_watcher/discord_webhook_url.txt
+```
+
+That file is listed in `.gitignore`, so it stays on the Pi and never gets committed or uploaded to GitHub.
 
 ## 2. Put it on GitHub
 
@@ -43,6 +50,7 @@ pip3 install requests beautifulsoup4 --break-system-packages
 
 git clone https://github.com/cptnslick/regatta_watcher.git ~/regatta_watcher
 cd ~/regatta_watcher
+echo "PASTE_YOUR_WEBHOOK_URL_HERE" > discord_webhook_url.txt
 ```
 
 **To pull down future updates** (e.g. when the script changes for a new series), just run:
