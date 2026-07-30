@@ -49,7 +49,7 @@ DATE_RE = re.compile(r"Date:\s*(\d{2}/\d{2}/\d{4})")
 def fetch_results_text() -> str:
     """Fetch the page and return just the text of the Results section."""
     resp = requests.get(
-        URL, timeout=20, headers={"User-Agent": "Mozilla/5.0 (results-watcher-bot)"}
+        URL, timeout=20, headers={"User-Agent": "Mozilla/5.0 (regatta-watcher-bot)"}
     )
     resp.raise_for_status()
     soup = BeautifulSoup(resp.text, "html.parser")
